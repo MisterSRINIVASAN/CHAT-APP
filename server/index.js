@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+const socket = require("socket.io");
 const app = express();
 require("dotenv").config(); // Load environment variables from .env file
 
@@ -9,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", userRoutes);
+app.use("/api/messages", messageRoutes);
 
 mongoose.connect("mongodb://127.0.0.1:27017/chat-app",{
     useNewUrlParser: true,
@@ -29,4 +32,27 @@ app.use((err, req, res, next) => {
 
 const server = app.listen(process.env.PORT, () => {
     console.log(`Server Started on Port ${process.env.PORT}`);
+});
+
+const io = socket(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    credentials: true,
+  },
+});
+
+global.onlineUsers = new Map();
+
+io.on("connection", (chatSocket) => {
+  global.chatSocket = chatSocket;
+  chatSocket.on("add-user", (userId) => {
+    onlineUsers.set(userId, chatSocket.id);
+  });
+
+  chatSocket.on("send-msg", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      chatSocket.to(sendUserSocket).emit("msg-recieve", data.msg);
+    }
+  });
 });
