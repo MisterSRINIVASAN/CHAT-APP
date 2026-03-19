@@ -1,5 +1,5 @@
-export const host = "http://localhost:5000"; // Correct the typo here
-export const registerRoute = `${host}/api/auth/register`; // Change to the correct registration endpoint
+export const host = process.env.REACT_APP_HOST_URL || "http://localhost:5000";
+export const registerRoute = `${host}/api/auth/register`;
 export const loginRoute = `${host}/api/auth/login`;
 export const setAvatarRoute = `${host}/api/auth/setAvatar`;
 export const allUsersRoute = `${host}/api/auth/allusers`;
